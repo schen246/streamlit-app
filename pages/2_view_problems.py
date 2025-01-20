@@ -134,9 +134,17 @@ div[data-testid="column"] button:hover {
 }
 /* Code editor styling */
 .streamlit-ace {
-    border: 1px solid #eee;
-    border-radius: 4px;
-    margin: 1rem 0;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    margin-top: 0.75rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+.streamlit-ace .ace_gutter {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+}
+.streamlit-ace .ace_print-margin {
+    background: #e9ecef !important;
 }
 /* Tab styling */
 .stTabs [data-baseweb="tab-list"] {
@@ -348,11 +356,18 @@ else:
             st.write(", ".join(problem['tags']))
     
     with right_col:
-        # Language selection with python3 as default
+        # Language selector with improved styling
         language = st.selectbox(
-            "Select Language",
-            ["python3", "javascript", "java", "cpp", "typescript"],
-            index=0,
+            "Programming Language",
+            ["python", "javascript", "java", "cpp", "csharp", "golang"],
+            format_func=lambda x: {
+                "python": "Python",
+                "javascript": "JavaScript",
+                "java": "Java",
+                "cpp": "C++",
+                "csharp": "C#",
+                "golang": "Go"
+            }[x],
             key="language_selector"
         )
         
@@ -363,7 +378,7 @@ else:
         code = st_ace(
             value=st.session_state.code,
             language=language,
-            theme="monokai",
+            theme="tomorrow",  # Modern theme
             keybinding="vscode",
             font_size=14,
             tab_size=4,
@@ -372,7 +387,7 @@ else:
             wrap=True,
             auto_update=True,
             key="code_editor",
-            height=700  # Increased height
+            height=300,  # Match add problem page height
         )
     
     # # Test Cases Section

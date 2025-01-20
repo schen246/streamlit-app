@@ -35,9 +35,24 @@ st.markdown("""
 }
 /* Solution styling */
 .streamlit-ace {
-    border: 1px solid #dee2e6;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    margin-top: 0.75rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+.streamlit-ace .ace_gutter {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+}
+.streamlit-ace .ace_print-margin {
+    background: #e9ecef !important;
+}
+/* Language selector styling */
+.stSelectbox [data-testid="stMarkdown"] {
+    background: #f8f9fa;
+    padding: 0.5rem;
     border-radius: 4px;
-    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 /* Button styling */
 .stButton button {
@@ -118,9 +133,9 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 # Solution
 st.subheader("Solution")
 
-# Language selector
+# Language selector with improved styling
 language = st.selectbox(
-    "Select Language",
+    "Programming Language",
     ["python", "javascript", "java", "cpp", "csharp", "golang"],
     format_func=lambda x: {
         "python": "Python",
@@ -134,37 +149,71 @@ language = st.selectbox(
 
 # Default templates for different languages
 templates = {
-    "python": """def solution_name(param1: type) -> return_type:
+    "python": """from typing import List, Optional
+
+def solution_name(nums: List[int], target: int) -> int:
+    '''
+    Problem solving approach:
+    1. Initialize variables
+    2. Implement the solution logic
+    3. Return the result
+    
+    Time complexity: O(?)
+    Space complexity: O(?)
+    '''
+    # Your code here
     pass""",
-    "javascript": """function solutionName(param1) {
+    "javascript": """/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number}
+ */
+function solutionName(nums, target) {
     // Your code here
 }""",
-    "java": """public class Solution {
-    public ReturnType solutionName(ParamType param1) {
+    "java": """class Solution {
+    /**
+     * @param nums Input array
+     * @param target Target value
+     * @return Result
+     */
+    public int solutionName(int[] nums, int target) {
         // Your code here
     }
 }""",
     "cpp": """class Solution {
 public:
-    ReturnType solutionName(ParamType param1) {
+    /**
+     * @param nums Input array
+     * @param target Target value
+     * @return Result
+     */
+    int solutionName(vector<int>& nums, int target) {
         // Your code here
     }
 };""",
     "csharp": """public class Solution {
-    public ReturnType SolutionName(ParamType param1) {
+    /// <summary>
+    /// Solution method description
+    /// </summary>
+    /// <param name="nums">Input array</param>
+    /// <param name="target">Target value</param>
+    /// <returns>Result</returns>
+    public int SolutionName(int[] nums, int target) {
         // Your code here
     }
 }""",
-    "golang": """func solutionName(param1 ParamType) ReturnType {
+    "golang": """// solutionName finds the target in the array
+func solutionName(nums []int, target int) int {
     // Your code here
 }"""
 }
 
-# Enhanced code editor
+# Enhanced code editor with improved styling
 solution_template = st_ace(
     value=templates[language],
     language=language,
-    theme="github",
+    theme="tomorrow",  # Modern theme
     keybinding="vscode",
     font_size=14,
     tab_size=4,
@@ -172,9 +221,9 @@ solution_template = st_ace(
     show_print_margin=True,
     wrap=True,
     auto_update=True,
-    height=200,
+    height=300,  # Taller editor
     annotations=[],
-    key=f"ace_editor_{language}"  # Force re-render when language changes
+    key=f"ace_editor_{language}"
 )
 
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
