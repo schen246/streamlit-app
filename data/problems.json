@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "title": "Binary Search",
+    "difficulty": "Easy",
+    "frequency": "⭐⭐⭐⭐",
+    "description": "Given an array of integers nums which is sorted in ascending order, and a target integer target, write a function to search target in nums. If target exists, then return its index. Otherwise, return -1.\n\nYou must write an algorithm with O(log n) runtime complexity.",
+    "example_input": "nums = [-1,0,3,5,9,12], target = 9",
+    "example_output": "4",
+    "example_explanation": "9 exists in nums and its index is 4",
+    "constraints": [
+      "1 <= nums.length <= 10^4",
+      "-10^4 <= nums[i] <= 10^4",
+      "All the integers in nums are unique",
+      "nums is sorted in ascending order",
+      "-10^4 <= target <= 10^4"
+    ],
+    "tags": ["Array", "Binary Search"],
+    "solution_template": "def binary_search(nums: List[int], target: int) -> int:\n    left, right = 0, len(nums) - 1\n    \n    while left <= right:\n        mid = (left + right) // 2\n        \n        if nums[mid] == target:\n            return mid\n        elif nums[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    \n    return -1",
+    "test_cases": {
+      "inputs": [
+        "[-1,0,3,5,9,12], 9",
+        "[-1,0,3,5,9,12], 2",
+        "[5], 5",
+        "[2,5], 2"
+      ],
+      "outputs": [
+        "4",
+        "-1",
+        "0",
+        "0"
+      ]
+    },
+    "date_added": "2024-01-20 12:00:00",
+    "solved": false
+  }
+]
