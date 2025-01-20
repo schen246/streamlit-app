@@ -33,7 +33,7 @@ st.markdown("""
     border-top: 1px solid #dee2e6;
     margin: 2rem 0;
 }
-/* Solution template styling */
+/* Solution styling */
 .streamlit-ace {
     border: 1px solid #dee2e6;
     border-radius: 4px;
@@ -115,12 +115,55 @@ with col2:
 
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-# Solution Template
-st.subheader("Solution Template")
-solution_template = st_ace(
-    value="""def solution_name(param1: type) -> return_type:
+# Solution
+st.subheader("Solution")
+
+# Language selector
+language = st.selectbox(
+    "Select Language",
+    ["python", "javascript", "java", "cpp", "csharp", "golang"],
+    format_func=lambda x: {
+        "python": "Python",
+        "javascript": "JavaScript",
+        "java": "Java",
+        "cpp": "C++",
+        "csharp": "C#",
+        "golang": "Go"
+    }[x]
+)
+
+# Default templates for different languages
+templates = {
+    "python": """def solution_name(param1: type) -> return_type:
     pass""",
-    language="python",
+    "javascript": """function solutionName(param1) {
+    // Your code here
+}""",
+    "java": """public class Solution {
+    public ReturnType solutionName(ParamType param1) {
+        // Your code here
+    }
+}""",
+    "cpp": """class Solution {
+public:
+    ReturnType solutionName(ParamType param1) {
+        // Your code here
+    }
+};""",
+    "csharp": """public class Solution {
+    public ReturnType SolutionName(ParamType param1) {
+        // Your code here
+    }
+}""",
+    "golang": """func solutionName(param1 ParamType) ReturnType {
+    // Your code here
+}"""
+}
+
+# Enhanced code editor
+solution_template = st_ace(
+    value=templates[language],
+    language=language,
     theme="github",
     keybinding="vscode",
     font_size=14,
@@ -129,7 +172,9 @@ solution_template = st_ace(
     show_print_margin=True,
     wrap=True,
     auto_update=True,
-    height=150
+    height=200,
+    annotations=[],
+    key=f"ace_editor_{language}"  # Force re-render when language changes
 )
 
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
