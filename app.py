@@ -1,13 +1,16 @@
 import streamlit as st
+import json
+import os
 
 # Configure page settings
 st.set_page_config(
-    page_title="SCode",
-    page_icon="📚",
-    layout="wide"
+    page_title="LeetCode Practice",
+    page_icon="📝",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS for consistent styling across pages
 st.markdown("""
 <style>
 /* Global styling */
@@ -24,221 +27,136 @@ div[data-testid="stDecoration"] {
 div[data-testid="stStatusWidget"] {
     display: none;
 }
-/* Header styling */
-.header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    margin-bottom: 1.5rem;
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #f8f9fa;
+    border-right: 1px solid #eee;
 }
-.logo {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-}
-.search-box {
-    flex-grow: 1;
-    padding: 0.5rem 1rem;
-    border: 1px solid #e0e0e0;
+/* Button styling */
+.stButton button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 8px 16px;
     border-radius: 4px;
-    font-size: 14px;
 }
-/* Progress styling */
-.progress-section {
-    background: white;
-    padding: 0.75rem 1rem;
+/* Input field styling */
+.stTextInput input, .stTextArea textarea {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 4px;
-    margin-bottom: 1rem;
-    border: 1px solid #eee;
 }
-.progress-bar {
-    height: 3px;
-    background: #eee;
-    border-radius: 1.5px;
+/* Card styling */
+.css-card {
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin: 0.5rem 0;
 }
-.progress-fill {
-    height: 100%;
-    background: #3178c6;
-    border-radius: 1.5px;
-}
-.progress-stats {
-    display: flex;
-    gap: 1.5rem;
-    font-size: 13px;
-}
-.stat-easy { color: #00b8a3; }
-.stat-medium { color: #ffc01e; }
-.stat-hard { color: #ff375f; }
-/* Filter styling */
-div[data-testid="stSelectbox"] > div {
-    background: #f8f9fa !important;
-    border: 1px solid #eee !important;
-    border-radius: 4px !important;
-    min-height: 35px !important;
-}
-div[data-testid="stSelectbox"] > div:first-child {
-    padding: 0 0.5rem !important;
-}
-div[data-testid="stSelectbox"] label {
-    display: none !important;
-}
-/* Table styling */
-.problem-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-.problem-table th {
-    background: #fafafa;
-    padding: 0.6rem 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    font-weight: 500;
-    color: #666;
-}
-.problem-table td {
-    padding: 0.6rem 0.75rem;
-    border-bottom: 1px solid #eee;
-}
-.problem-link {
-    color: #1a73e8;
-    text-decoration: none;
-}
+/* Difficulty colors */
 .difficulty-easy { color: #00b8a3; }
 .difficulty-medium { color: #ffc01e; }
 .difficulty-hard { color: #ff375f; }
-/* Company styling */
-.companies-section {
-    background: white;
-    padding: 1rem;
-    border-radius: 4px;
-    border: 1px solid #eee;
-}
-.company-search {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    font-size: 14px;
-}
-.company-tag {
-    display: inline-flex;
-    align-items: center;
-    background: #f5f5f5;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    margin: 0.25rem;
-    font-size: 13px;
-}
-.company-count {
-    background: #e8e8e8;
-    padding: 0.1rem 0.5rem;
-    border-radius: 8px;
-    margin-left: 0.5rem;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown("""
-<div class="header">
-    <span class="logo">SCode</span>
-    <input type="text" class="search-box" placeholder="🔍 Search problems by title, tag, or company...">
-</div>
-""", unsafe_allow_html=True)
+# Initialize session state
+if 'problems' not in st.session_state:
+    # Load problems from JSON file
+    try:
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        if os.path.exists('data/problems.json'):
+            with open('data/problems.json', 'r') as f:
+                st.session_state.problems = json.load(f)
+        else:
+            st.session_state.problems = []
+    except Exception as e:
+        st.error(f"Error loading problems: {str(e)}")
+        st.session_state.problems = []
 
-# Main content
-col1, col2 = st.columns([3, 1])
+# Main page content
+st.title("LeetCode Practice")
+
+# Display quick stats in cards using columns
+col1, col2, col3, col4 = st.columns(4)
+
+total_problems = len(st.session_state.problems)
+solved_problems = len([p for p in st.session_state.problems if p.get("solved", False)])
+easy_problems = len([p for p in st.session_state.problems if p["difficulty"] == "Easy"])
+medium_problems = len([p for p in st.session_state.problems if p["difficulty"] == "Medium"])
+hard_problems = len([p for p in st.session_state.problems if p["difficulty"] == "Hard"])
 
 with col1:
-    # Progress section
     st.markdown("""
-    <div class="progress-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Progress</span>
-            <span>317/986 problems solved</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: 32%;"></div>
-        </div>
-        <div class="progress-stats">
-            <span class="stat-easy">Easy 63/174</span>
-            <span class="stat-medium">Medium 204/592</span>
-            <span class="stat-hard">Hard 50/220</span>
-        </div>
+    <div class="css-card">
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Total Problems</h3>
+        <p style="font-size: 1.5rem; font-weight: bold; margin: 0;">{}</p>
     </div>
-    """, unsafe_allow_html=True)
-    
-    # Filters
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.selectbox("Difficulty", ["All", "Easy", "Medium", "Hard"], label_visibility="collapsed")
-    with col2:
-        st.selectbox("Status", ["All", "Solved", "Unsolved"], label_visibility="collapsed")
-    with col3:
-        st.selectbox("Tags", ["All", "Array", "String", "Dynamic Programming"], label_visibility="collapsed")
-
-    # Problems table
-    st.markdown("""
-    <table class="problem-table">
-        <thead>
-            <tr>
-                <th style="width: 5%">#</th>
-                <th style="width: 60%">Title</th>
-                <th style="width: 15%">Difficulty</th>
-                <th style="width: 20%">Frequency</th>
-            </tr>
-        </thead>
-        <tbody>
-    """, unsafe_allow_html=True)
-    
-    # Sample problems
-    problems = [
-        {"id": "✓1", "title": "Binary Search", "difficulty": "Easy", "frequency": "⭐⭐⭐"},
-        {"id": "2", "title": "Two Sum", "difficulty": "Medium", "frequency": "⭐⭐⭐⭐⭐"},
-        {"id": "✓3", "title": "Design Hit Counter", "difficulty": "Medium", "frequency": "⭐⭐⭐⭐"}
-    ]
-    
-    for problem in problems:
-        difficulty_class = f"difficulty-{problem['difficulty'].lower()}"
-        st.markdown(f"""
-        <tr>
-            <td>{problem['id']}</td>
-            <td><a href="#" class="problem-link">{problem['title']}</a></td>
-            <td class="{difficulty_class}">{problem['difficulty']}</td>
-            <td>{problem['frequency']}</td>
-        </tr>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("</tbody></table>", unsafe_allow_html=True)
+    """.format(total_problems), unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
-    <div class="companies-section">
-        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 16px;">Companies</h3>
-        <input type="text" class="company-search" placeholder="🔍 Search companies">
+    <div class="css-card">
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Problems Solved</h3>
+        <p style="font-size: 1.5rem; font-weight: bold; margin: 0;">{} ({}%)</p>
+    </div>
+    """.format(solved_problems, int(solved_problems/total_problems*100) if total_problems > 0 else 0), unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div class="css-card">
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Difficulty Distribution</h3>
+        <p style="font-size: 1rem; margin: 0;">
+            <span class="difficulty-easy">Easy: {}</span> • 
+            <span class="difficulty-medium">Medium: {}</span> • 
+            <span class="difficulty-hard">Hard: {}</span>
+        </p>
+    </div>
+    """.format(easy_problems, medium_problems, hard_problems), unsafe_allow_html=True)
+
+with col4:
+    st.markdown("""
+    <div class="css-card">
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Recent Activity</h3>
+        <p style="font-size: 1rem; margin: 0;">Last 7 days: {} solved</p>
+    </div>
+    """.format(len([p for p in st.session_state.problems if p.get("solved", False) and 
+                   p.get("solved_date", "").startswith("2024")])), unsafe_allow_html=True)
+
+# Recent problems section
+st.markdown("### Recent Problems")
+recent_problems = sorted(
+    st.session_state.problems,
+    key=lambda x: x.get("date_added", ""),
+    reverse=True
+)[:5]
+
+for problem in recent_problems:
+    difficulty_class = f"difficulty-{problem['difficulty'].lower()}"
+    st.markdown(f"""
+    <div class="css-card" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
+            <h4 style="margin: 0; font-size: 1rem;">{problem['title']}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #666;">
+                Added {problem.get('date_added', 'N/A')}
+            </p>
+        </div>
+        <span class="{difficulty_class}">{problem['difficulty']}</span>
+    </div>
     """, unsafe_allow_html=True)
-    
-    companies = [
-        ("Google", "683"),
-        ("Amazon", "430"),
-        ("Microsoft", "509"),
-        ("Facebook", "486"),
-        ("Apple", "447"),
-        ("Bloomberg", "404"),
-        ("Adobe", "317"),
-        ("Oracle", "223")
-    ]
-    
-    for company, count in companies:
-        st.markdown(f"""
-        <span class="company-tag">
-            {company}<span class="company-count">{count}</span>
-        </span>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("</div></div>", unsafe_allow_html=True)
+
+# Quick actions
+st.markdown("### Quick Actions")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("➕ Add New Problem"):
+        st.switch_page("pages/1_add_problem.py")
+with col2:
+    if st.button("📚 View All Problems"):
+        st.switch_page("pages/2_view_problems.py")
+with col3:
+    if st.button("🔄 Sync with GitHub"):
+        st.switch_page("pages/3_github_sync.py")

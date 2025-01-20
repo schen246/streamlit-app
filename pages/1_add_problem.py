@@ -173,17 +173,24 @@ if st.button("Add Problem"):
             "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
-        # Add to session state
+        def save_problems(problems):
+            """Save problems to the JSON file"""
+            if not os.path.exists('data'):
+                os.makedirs('data')
+            with open('data/problems.json', 'w') as f:
+                json.dump(problems, f, indent=2)
+
+        # Add to session state and save to file
         if "problems" not in st.session_state:
-            st.session_state["problems"] = []
-        st.session_state["problems"].append(problem)
+            st.session_state.problems = []
         
-        # Save to solutions directory
-        if not os.path.exists("solutions"):
-            os.makedirs("solutions")
+        # Set problem ID
+        problem["id"] = str(len(st.session_state.problems) + 1)
         
-        filename = f"solutions/{title.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(filename, "w") as f:
-            json.dump(problem, f, indent=2)
+        # Add to session state
+        st.session_state.problems.append(problem)
+        
+        # Save to JSON file
+        save_problems(st.session_state.problems)
         
         st.success(f"Problem '{title}' added successfully!")
