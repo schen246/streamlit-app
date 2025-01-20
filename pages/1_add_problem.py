@@ -3,6 +3,72 @@ from streamlit_ace import st_ace
 import os
 from datetime import datetime
 import json
+import sys
+from io import StringIO
+import contextlib
+from typing import List
+import ast
+
+@contextlib.contextmanager
+def capture_output():
+    """Capture stdout and stderr"""
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
+
+def parse_input(input_str):
+    """Parse input string to Python objects"""
+    try:
+        return ast.literal_eval(input_str)
+    except:
+        return input_str
+
+def execute_code(code, test_input):
+    """Execute code with test input and return output"""
+    with capture_output() as (out, err):
+        try:
+            # Create namespace for execution
+            namespace = {'List': List}
+            
+            # Execute the function definition
+            exec(code, namespace)
+            
+            # Get the function name (assuming it's the only function defined)
+            func_name = [name for name, obj in namespace.items() 
+                       if callable(obj) and name != 'List'][0]
+            
+            # Parse input and call function
+            if isinstance(test_input, str):
+                # Split by comma but respect brackets/parentheses
+                args = []
+                current = ""
+                bracket_count = 0
+                
+                for char in test_input:
+                    if char == ',' and bracket_count == 0:
+                        if current.strip():
+                            args.append(parse_input(current.strip()))
+                        current = ""
+                    else:
+                        if char in '[({':
+                            bracket_count += 1
+                        elif char in '])}':
+                            bracket_count -= 1
+                        current += char
+                
+                if current.strip():
+                    args.append(parse_input(current.strip()))
+            else:
+                args = [test_input]
+            
+            result = namespace[func_name](*args)
+            return str(result), out.getvalue(), err.getvalue()
+        except Exception as e:
+            return None, out.getvalue(), str(e)
 
 # Configure page settings
 st.set_page_config(layout="wide")
@@ -228,19 +294,64 @@ solution_template = st_ace(
 
 st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-# Test cases in a container
+# Test cases section
 st.subheader("Test Cases")
-test_container = st.container()
-with test_container:
-    col1, col2 = st.columns(2)
-    with col1:
-        test_input = st.text_area("Test Input", 
-                                 placeholder="One test case per line, e.g.:\n[-1, 0, 3, 5, 9, 12], 9\n[-1, 0, 3, 5, 9, 12], 2",
-                                 height=100)
-    with col2:
-        test_output = st.text_area("Expected Output",
-                                  placeholder="One result per line, corresponding to test inputs, e.g.:\n4\n-1",
-                                  height=100)
+
+# Test case inputs and outputs
+col1, col2 = st.columns(2)
+with col1:
+    test_input = st.text_area("Test Input", 
+                           placeholder="One test case per line, e.g.:\n[-1, 0, 3, 5, 9, 12], 9\n[-1, 0, 3, 5, 9, 12], 2",
+                           height=100)
+with col2:
+    test_output = st.text_area("Expected Output",
+                            placeholder="One result per line, corresponding to test inputs, e.g.:\n4\n-1",
+                            height=100)
+
+# Run tests button and results
+if st.button("Run Tests", type="primary"):
+    if not test_input or not test_output:
+        st.warning("Please add test cases before running tests.")
+    else:
+        test_inputs = [i.strip() for i in test_input.split('\n') if i.strip()]
+        test_outputs = [o.strip() for o in test_output.split('\n') if o.strip()]
+        
+        if len(test_inputs) != len(test_outputs):
+            st.error("Number of test inputs and outputs don't match.")
+        else:
+            all_passed = True
+            for i, (test_in, expected) in enumerate(zip(test_inputs, test_outputs)):
+                result, stdout, stderr = execute_code(solution_template, test_in)
+                
+                # Display test case results
+                with st.expander(f"Test Case {i + 1}", expanded=True):
+                    cols = st.columns([0.3, 0.3, 0.3, 0.1])
+                    cols[0].markdown("**Input:**")
+                    cols[0].code(test_in)
+                    cols[1].markdown("**Expected:**")
+                    cols[1].code(expected)
+                    cols[2].markdown("**Result:**")
+                    cols[2].code(result if not stderr else "Error")
+                    
+                    if stderr:
+                        cols[3].markdown("**Status:**")
+                        cols[3].error("❌")
+                        st.error(f"Error: {stderr}")
+                        all_passed = False
+                    else:
+                        cols[3].markdown("**Status:**")
+                        if str(result) == expected:
+                            cols[3].success("✅")
+                        else:
+                            cols[3].error("❌")
+                            all_passed = False
+            
+            if all_passed:
+                st.success("🎉 All Tests Passed! You can now add this problem.")
+            else:
+                st.error("❌ Some tests failed. Please fix the solution before adding the problem.")
+
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 # Submit button
 if st.button("Add Problem"):
